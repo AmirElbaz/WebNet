@@ -52,7 +52,45 @@ int main()
 		cout << "client can start sending and recieving data..." << endl;
 
 	}
-	system("pause");
+	cout << "\n=== step 4 - Chat with server ===" << endl;
+	char buffer[200];
+	int bytecount;
+	while (true) {
+		cin.getline(buffer, 200);
+		if (strcmp(buffer, "leave") == 0) {
+			bytecount = send(clientSocket, "leave", 200, 0);
+			break;
+		}
+		bytecount = send(clientSocket, buffer, 200, 0);
+		if (bytecount > 0)
+			cout << "------------------------------" << endl;
+		else
+			WSACleanup();
+		bytecount = recv(clientSocket, buffer, 200, 0);
+		if (strcmp(buffer, "leave") == 0) {
+			
+			break;
+		}
+		if (bytecount > 0) {
+			std::time_t now = std::time(nullptr);
+
+			// Use localtime_s to convert time_t to tm
+			std::tm now_tm;
+			localtime_s(&now_tm, &now); // Safer alternative to localtime
+
+			cout << "server: " << buffer << " " << now_tm.tm_hour << ":"
+				<< now_tm.tm_min << ":"
+				<< now_tm.tm_sec << endl;
+
+		}
+		else
+			WSACleanup();
+	}
+
+	cout << "room closed" << endl;
+	
+	closesocket(clientSocket);
 	WSACleanup();
+	system("pause");
 	return 0;
 }

@@ -5,6 +5,8 @@
 #include "stdafx.h"
 #include <WinSock2.h>
 #include <WS2tcpip.h>
+#include <ctime>
+#include <chrono>
 using namespace std;
 
 int main()
@@ -57,6 +59,7 @@ int main()
 		cout << "listen() error listening in socket" << endl;
 	else
 		cout << "listening is OK, waiting for connections...." << endl;
+
 	cout << "\n=== step -5 Accept connection ===" << endl;
 
 	acceptSocket = accept(serverSocket, NULL, NULL);
@@ -65,10 +68,55 @@ int main()
 		WSACleanup();
 		return -1;
 	}
-	else {
+	else 
 		cout << "Accept connection" << endl;
-		system("pause");
-		WSACleanup();
+
+	cout << "\n=== step -6 chat with client ===" << endl;
+	char buffer[200];
+	int bytecount;
+	while (true) {
+		bytecount = recv(acceptSocket, buffer, 200, 0);
+		if (strcmp(buffer, "leave") == 0) {
+
+			break;
+		}
+		if (bytecount > 0) {
+			std::time_t now = std::time(nullptr);
+
+			// Use localtime_s to convert time_t to tm
+			std::tm now_tm;
+			localtime_s(&now_tm, &now); // Safer alternative to localtime
+
+				cout << "client: " << buffer <<" " << now_tm.tm_hour << ":"
+					<< now_tm.tm_min << ":"
+					<< now_tm.tm_sec << endl;
+			
+		}
+		else {
+			WSACleanup();
+		}
+		
+	
+		
+		cin.getline(buffer, 200);
+		if (strcmp(buffer, "leave") == 0) {
+			bytecount = send(acceptSocket, "leave", 200, 0);
+
+			break;
+		}
+		bytecount = send(acceptSocket, buffer, 200, 0);
+		if (bytecount > 0)
+			cout << "------------------------------" << endl;
+		else
+			WSACleanup();
+		
 	}
+	
+	cout << "room closed" << endl;
+	closesocket(serverSocket);
+	closesocket(acceptSocket);
+		WSACleanup();
+		system("pause");
+
 }
 
